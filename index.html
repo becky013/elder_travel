@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f8f1e8" />
+  <meta name="description" content="A high-fidelity interactive iPhone prototype for a senior community home-exchange and immersive travel service." />
+  <title>Senior Tourism — Interactive iPhone Prototype</title>
+  <style>
+    :root {
+      --orange: #ff9a3d;
+      --orange-2: #ffb168;
+      --peach: #ffd3a8;
+      --cream: #fffaf4;
+      --paper: #f8f1e8;
+      --green: #374f36;
+      --green-2: #58765a;
+      --mint: #c0e3bf;
+      --ink: #243028;
+      --muted: #738078;
+      --line: #eadfd3;
+      --shadow: 0 22px 70px rgba(48, 55, 43, .18);
+      --screen-w: min(390px, calc((100vh - 76px) * .462), calc(100vw - 34px));
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 14% 12%, rgba(255,177,104,.36), transparent 27%),
+        radial-gradient(circle at 88% 84%, rgba(192,227,191,.52), transparent 29%),
+        linear-gradient(135deg, #fffaf4 0%, #f6ede2 55%, #eef5ec 100%);
+      overflow-x: hidden;
+    }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .stage {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(250px, 340px) auto minmax(250px, 340px);
+      align-items: center;
+      justify-content: center;
+      gap: clamp(26px, 5vw, 82px);
+      padding: 34px clamp(24px, 4vw, 68px);
+    }
+    .intro { max-width: 330px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--green); font-size: 12px; font-weight: 800; letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before { content:""; width: 28px; height: 2px; border-radius: 99px; background: var(--orange); }
+    .intro h1 { font-size: clamp(36px, 4.2vw, 64px); line-height: .98; letter-spacing: -.05em; margin: 18px 0 18px; }
+    .intro h1 span { color: var(--orange); }
+    .intro p { color: #667168; font-size: 15px; line-height: 1.7; margin: 0 0 24px; }
+    .guide {
+      max-width: 320px; padding: 22px; border-radius: 28px;
+      background: rgba(255,255,255,.62); border: 1px solid rgba(255,255,255,.88);
+      box-shadow: 0 20px 50px rgba(52,72,52,.09); backdrop-filter: blur(18px);
+    }
+    .guide h2 { margin: 0 0 8px; font-size: 18px; letter-spacing: -.02em; }
+    .guide > p { margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .route-list { display:grid; gap:10px; }
+    .route-btn {
+      appearance:none; border:0; width:100%; padding:12px 13px; border-radius:16px;
+      display:grid; grid-template-columns:34px 1fr 18px; align-items:center; gap:10px;
+      text-align:left; color:var(--ink); background:#fff; cursor:pointer; box-shadow:0 6px 18px rgba(53,63,52,.06);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .route-btn:hover { transform: translateY(-2px); box-shadow:0 10px 24px rgba(53,63,52,.11); }
+    .route-num { display:grid; place-items:center; width:32px; height:32px; border-radius:11px; background:var(--peach); color:#8a4d17; font-weight:800; font-size:12px; }
+    .route-btn b { display:block; font-size:13px; }
+    .route-btn small { display:block; margin-top:2px; color:var(--muted); font-size:10px; }
+    .route-arrow { color:var(--orange); font-size:20px; }
+    .reset-link { margin-top:14px; width:100%; border:0; background:transparent; color:var(--green); font-weight:800; font-size:12px; cursor:pointer; }
+
+    .phone-wrap { position:relative; display:grid; place-items:center; }
+    .iphone {
+      position:relative; width:calc(var(--screen-w) + 24px); aspect-ratio:414 / 868;
+      padding:12px; border-radius:calc(var(--screen-w) * .13);
+      background:linear-gradient(145deg,#373737 0%,#050505 22%,#1f1f1f 54%,#000 100%);
+      box-shadow:0 3px 0 #696969 inset, 0 -2px 0 #2b2b2b inset, var(--shadow);
+    }
+    .iphone::before { content:""; position:absolute; inset:5px; border-radius:inherit; border:1px solid rgba(255,255,255,.18); pointer-events:none; }
+    .side-button { position:absolute; width:4px; background:linear-gradient(#151515,#555,#111); border-radius:4px 0 0 4px; left:-4px; }
+    .mute { top:14%; height:5%; } .vol-up { top:23%; height:8%; } .vol-down { top:33%; height:8%; }
+    .power { right:-4px; left:auto; top:25%; height:15%; border-radius:0 4px 4px 0; }
+    .screen {
+      position:absolute; inset:12px; overflow:hidden; border-radius:calc(var(--screen-w) * .105);
+      background:var(--cream); color:var(--ink); isolation:isolate; touch-action:pan-y;
+    }
+    .dynamic-island {
+      position:absolute; z-index:100; left:50%; top:10px; transform:translateX(-50%);
+      width:29%; height:28px; border-radius:20px; background:#050505; box-shadow:0 0 0 1px rgba(255,255,255,.05);
+      pointer-events:none;
+    }
+    .dynamic-island::after { content:""; position:absolute; right:12px; top:9px; width:8px; height:8px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#20365d,#070a0c 58%); }
+    .status-bar {
+      position:absolute; z-index:90; top:0; left:0; right:0; height:48px;
+      padding:11px 18px 0; display:flex; justify-content:space-between; align-items:flex-start;
+      font-size:12px; font-weight:800; pointer-events:none;
+    }
+    .status-icons { display:flex; gap:5px; align-items:center; font-size:10px; }
+    .battery { width:20px; height:9px; border:1.5px solid currentColor; border-radius:3px; position:relative; }
+    .battery::before { content:""; position:absolute; inset:1.5px; right:3px; background:currentColor; border-radius:1px; }
+    .battery::after { content:""; position:absolute; right:-3px; top:2px; width:2px; height:4px; border-radius:0 1px 1px 0; background:currentColor; }
+    #app { position:absolute; inset:42px 0 0; }
+
+    .app-page { position:absolute; inset:0; background:var(--cream); animation:pageIn .28s cubic-bezier(.2,.8,.2,1); }
+    @keyframes pageIn { from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:none; } }
+    .scroll { height:calc(100% - 70px); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; padding:0 14px 26px; }
+    .header + .scroll { height:calc(100% - 118px); }
+    .scroll::-webkit-scrollbar { display:none; }
+    .scroll.no-nav { height:100%; padding-bottom:20px; }
+    .home-scroll { padding-top:8px; }
+
+    .header { height:48px; display:grid; grid-template-columns:38px 1fr 38px; align-items:center; padding:0 10px; border-bottom:1px solid rgba(226,214,200,.65); background:rgba(255,250,244,.92); backdrop-filter:blur(14px); }
+    .header h2 { margin:0; text-align:center; font-size:16px; letter-spacing:-.02em; }
+    .icon-btn { width:36px; height:36px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:var(--ink); cursor:pointer; }
+    .icon-btn:active { background:#f0e6dc; }
+    .spacer { width:36px; }
+
+    .hero-row { display:flex; justify-content:space-between; align-items:flex-start; padding:4px 2px 12px; }
+    .hero-row h1 { margin:0; color:var(--green); font-size:25px; letter-spacing:-.045em; }
+    .hero-row p { margin:3px 0 0; color:var(--muted); font-size:11px; }
+    .bell { width:36px; height:36px; border:0; border-radius:50%; background:#fff; color:var(--green); box-shadow:0 5px 15px rgba(44,60,43,.08); cursor:pointer; position:relative; }
+    .bell::after { content:""; position:absolute; width:7px; height:7px; border-radius:50%; right:7px; top:7px; background:#f07b56; border:2px solid #fff; }
+    .hero-actions { display:flex; align-items:center; gap:8px; }
+    .lang-toggle { width:36px; height:36px; border:1px solid var(--line); border-radius:50%; background:#fff; color:var(--green); box-shadow:0 5px 15px rgba(44,60,43,.08); cursor:pointer; font-size:11px; font-weight:900; }
+
+    .card { background:#fff; border:1px solid rgba(233,221,208,.85); border-radius:17px; box-shadow:0 7px 22px rgba(52,63,50,.055); overflow:hidden; }
+    .card + .card { margin-top:11px; }
+    .section-title { display:flex; justify-content:space-between; align-items:center; margin:17px 2px 9px; }
+    .section-title h3 { margin:0; font-size:14px; }
+    .section-title button { border:0; color:var(--muted); background:transparent; font-size:10px; cursor:pointer; }
+    .reservation { padding:14px; background:linear-gradient(135deg,var(--peach),#ffe6cd); border-color:#ffd1a4; }
+    .reservation-top { display:flex; justify-content:space-between; align-items:center; }
+    .reservation-top b { font-size:13px; }
+    .reservation-top span { color:var(--green); font-size:10px; font-weight:700; }
+    .date-pill { display:flex; align-items:center; gap:9px; padding:10px; border-radius:12px; margin:10px 0; background:rgba(255,255,255,.32); color:#8a4d17; }
+    .date-pill strong { font-size:12px; display:block; } .date-pill small { display:block; font-size:10px; margin-top:2px; }
+    .btn { appearance:none; border:0; min-height:44px; border-radius:13px; padding:0 16px; font-weight:800; font-size:12px; cursor:pointer; transition:transform .12s ease, filter .15s ease; }
+    .btn:active { transform:scale(.98); }
+    .btn-orange { background:linear-gradient(135deg,var(--orange),#ff8a35); color:#fff; }
+    .btn-green { background:linear-gradient(135deg,#426542,#274429); color:#fff; }
+    .btn-soft { background:#f5eee7; color:var(--green); }
+    .btn-block { width:100%; }
+    .completed { padding:13px; }
+    .completed-line { display:grid; grid-template-columns:28px 1fr auto; gap:9px; align-items:center; }
+    .check-dot { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; color:#fff; background:var(--green-2); }
+    .completed b { display:block; font-size:11px; } .completed small { color:var(--muted); font-size:9px; }
+
+    .story-row { display:grid; grid-auto-flow:column; grid-auto-columns:43%; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:4px; scrollbar-width:none; }
+    .story-row::-webkit-scrollbar { display:none; }
+    .story { scroll-snap-align:start; overflow:hidden; background:#fff; border-radius:14px; border:1px solid var(--line); }
+    .story img { width:100%; height:92px; object-fit:cover; display:block; }
+    .story div { padding:8px; } .story b { font-size:10px; display:block; } .story small { color:var(--muted); font-size:8px; }
+
+    .bottom-nav { position:absolute; z-index:30; left:0; right:0; bottom:0; height:70px; padding:7px 8px 14px; display:grid; grid-template-columns:repeat(5,1fr); background:rgba(255,252,248,.95); border-top:1px solid var(--line); backdrop-filter:blur(18px); }
+    .nav-item { appearance:none; border:0; background:transparent; color:#7c827d; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:8px; cursor:pointer; }
+    .nav-item svg { width:21px; height:21px; stroke-width:1.9; }
+    .nav-item.active { color:var(--orange); font-weight:800; }
+    .nav-item.share svg { width:27px; height:27px; padding:5px; border-radius:50%; color:#fff; background:var(--orange); stroke-width:2; }
+
+    .search-box { display:flex; align-items:center; gap:8px; height:38px; margin:3px 0 10px; padding:0 11px; border-radius:13px; border:1px solid var(--line); background:#fff; color:#8d918e; }
+    .search-box input { width:100%; border:0; outline:0; background:transparent; font-size:11px; color:var(--ink); }
+    .tabs, .chips { display:flex; overflow-x:auto; gap:7px; scrollbar-width:none; }
+    .tabs { padding:2px 0 9px; border-bottom:1px solid var(--line); }
+    .tab, .chip { white-space:nowrap; border:0; background:transparent; color:var(--muted); font-size:9px; cursor:pointer; }
+    .tab { padding:7px 5px; border-bottom:2px solid transparent; }
+    .tab.active { color:var(--green); border-color:var(--green); font-weight:800; }
+    .chips { padding:10px 0; }
+    .chip { padding:7px 11px; border-radius:10px; border:1px solid var(--line); background:#fff; }
+    .chip.active { background:var(--green); color:#fff; border-color:var(--green); }
+    .listing { display:grid; grid-template-columns:40% 1fr; min-height:175px; cursor:pointer; }
+    .listing > img { width:100%; height:100%; object-fit:cover; }
+    .listing-copy { min-width:0; padding:12px; }
+    .person-line { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+    .avatar { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; flex:none; background:linear-gradient(145deg,var(--peach),var(--mint)); color:var(--green); font-weight:900; font-size:12px; }
+    .avatar-img { display:block; object-fit:cover; border:1.5px solid rgba(255,255,255,.9); box-shadow:0 3px 10px rgba(42,54,42,.12); }
+    .person-line .avatar-img { width:34px; height:34px; }
+    .person-meta { min-width:0; }
+    .person-meta b { font-size:11px; display:block; } .person-meta small { display:block; font-size:9px; color:var(--muted); }
+    .listing h3 { margin:0 0 5px; font-size:13px; } .listing p { margin:0; color:#59625c; font-size:9px; line-height:1.45; }
+    .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+    .tag { padding:4px 6px; border-radius:6px; background:#f3f0eb; color:#646b66; font-size:7px; }
+
+    .house-hero { position:relative; margin:0 -14px; height:202px; overflow:hidden; background:#eee4d9; }
+    .house-hero img { width:100%; height:100%; object-fit:cover; display:block; transition:opacity .18s ease; }
+    .house-hero img.legacy-photo { height:112%; object-position:center top; }
+    .house-arrow { position:absolute; z-index:2; top:50%; transform:translateY(-50%); width:31px; height:31px; border:0; border-radius:50%; display:grid; place-items:center; color:#fff; background:rgba(28,38,29,.42); backdrop-filter:blur(8px); cursor:pointer; }
+    .house-arrow.prev { left:10px; } .house-arrow.next { right:10px; }
+    .house-dots { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px; padding:5px 7px; border-radius:999px; background:rgba(29,39,30,.26); backdrop-filter:blur(7px); }
+    .dot { width:6px; height:6px; padding:0; border:0; border-radius:50%; background:rgba(255,255,255,.78); cursor:pointer; } .dot.active { width:18px; border-radius:8px; background:var(--orange); }
+    .detail-list { padding:4px 0 10px; }
+    .detail-row { display:grid; grid-template-columns:34px 1fr; gap:9px; padding:12px 3px; border-bottom:1px solid var(--line); }
+    .detail-icon { width:30px; height:30px; border-radius:50%; background:#eef3ec; color:var(--green); display:grid; place-items:center; }
+    .detail-row b { display:block; font-size:11px; } .detail-row p { margin:3px 0 0; font-size:9px; color:#58625a; line-height:1.45; }
+    .sticky-actions { position:absolute; z-index:25; left:0; right:0; bottom:70px; padding:10px 14px; display:grid; grid-template-columns:1fr 1.18fr; gap:9px; background:linear-gradient(transparent,rgba(255,250,244,.96) 22%); }
+    .house-page .scroll { padding-bottom:82px; }
+
+    .chat-list { display:flex; flex-direction:column; gap:12px; padding-top:12px; padding-bottom:75px; }
+    .message { display:flex; align-items:flex-end; gap:7px; max-width:83%; }
+    .message.mine { align-self:flex-end; flex-direction:row-reverse; }
+    .message .avatar { width:28px; height:28px; font-size:9px; }
+    .bubble { padding:10px 12px; border-radius:14px; background:#fff; border:1px solid var(--line); font-size:10px; line-height:1.45; box-shadow:0 4px 12px rgba(70,70,60,.04); }
+    .mine .bubble { background:linear-gradient(145deg,#ffe3c7,var(--peach)); border-color:#ffd4aa; }
+    .bubble-time { margin-top:4px; color:#8d8f8d; font-size:7px; }
+    .typing { display:flex; gap:4px; padding:11px 14px; }
+    .typing i { width:5px; height:5px; border-radius:50%; background:#999; animation:bounce 1s infinite; }
+    .typing i:nth-child(2) { animation-delay:.15s; } .typing i:nth-child(3) { animation-delay:.3s; }
+    @keyframes bounce { 50% { transform:translateY(-4px); } }
+    .composer { position:absolute; z-index:26; left:0; right:0; bottom:70px; min-height:54px; display:grid; grid-template-columns:1fr 36px; align-items:center; gap:9px; padding:8px 13px; border-top:1px solid var(--line); background:rgba(255,250,244,.98); }
+    .composer input { width:100%; min-width:0; height:36px; border:1px solid var(--line); border-radius:18px; padding:0 14px; background:#fff; outline:0; font-size:10px; }
+    .send { width:36px; height:36px; padding:0; border:0; border-radius:50%; background:var(--orange); color:#fff; cursor:pointer; display:grid; place-items:center; }
+
+    .info-box { padding:12px; margin-top:10px; }
+    .info-box h3 { margin:0 0 9px; font-size:12px; }
+    .profile-pair { display:grid; gap:8px; }
+    .profile-line { display:grid; grid-template-columns:36px 1fr 28px; gap:9px; align-items:center; padding:8px; border-radius:12px; background:#fff8f0; }
+    .profile-copy b { font-size:10px; display:block; } .profile-copy small { display:block; font-size:8px; color:var(--muted); }
+    .exchange-arrow { display:grid; place-items:center; color:var(--orange); font-size:18px; margin:-3px 0; }
+    .rules { list-style:none; padding:0; margin:0; display:grid; gap:8px; }
+    .rules li { display:flex; gap:7px; align-items:flex-start; font-size:9px; line-height:1.4; color:#566157; }
+    .rules li::before { content:"✓"; width:16px; height:16px; display:grid; place-items:center; flex:none; border-radius:50%; background:#e8f2e6; color:var(--green); font-size:9px; font-weight:900; }
+    .footer-btn { position:relative; margin:14px 0 8px; }
+
+    .route-card { padding:13px; margin-top:10px; }
+    .route-head { display:grid; grid-template-columns:1fr 28px 1fr; align-items:center; gap:8px; }
+    .route-city:last-child { text-align:right; }
+    .route-city b { display:block; font-size:14px; } .route-city span { color:var(--muted); font-size:8px; }
+    .route-plane { color:var(--green); text-align:center; }
+    .date-strip { margin-top:10px; padding:9px; border-radius:10px; text-align:center; background:#fff7ef; color:#6e5a49; font-size:9px; }
+    .timeline { position:relative; padding-left:25px; margin:12px 0; }
+    .timeline::before { content:""; position:absolute; top:8px; bottom:8px; left:10px; width:2px; background:#bdd6bb; }
+    .stop { position:relative; padding:7px 0 12px; }
+    .stop::before { content:""; position:absolute; left:-21px; top:8px; width:10px; height:10px; border-radius:50%; background:var(--mint); border:3px solid #fff; box-shadow:0 0 0 1px var(--mint); }
+    .stop b { font-size:10px; display:block; } .stop span { font-size:8px; color:var(--muted); line-height:1.4; }
+
+    .event-hero { margin:0 -14px; position:relative; }
+    .event-hero img { width:100%; height:260px; object-fit:cover; display:block; }
+    .event-hero::after { content:""; position:absolute; inset:auto 0 0; height:60%; background:linear-gradient(transparent,rgba(24,40,25,.68)); }
+    .event-overlay { position:absolute; z-index:2; left:16px; right:16px; bottom:15px; color:#fff; }
+    .event-overlay h2 { margin:0 0 5px; font-size:21px; } .event-overlay p { margin:0; font-size:9px; opacity:.9; }
+    .event-info { padding:13px; margin-top:12px; }
+    .event-info p { font-size:9px; line-height:1.5; color:#59625b; }
+    .volunteer { display:grid; grid-template-columns:44px 1fr 18px; gap:10px; align-items:center; padding:12px; cursor:pointer; }
+    .vol-icon { width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:#ffe0b9; color:var(--green); font-size:20px; }
+    .vol-copy b { display:block; font-size:10px; } .vol-copy small { display:block; margin-top:3px; color:var(--muted); font-size:8px; line-height:1.35; }
+    .volunteer .avatar-img { width:42px; height:42px; }
+
+    .share-hero { padding:14px; background:linear-gradient(145deg,#eaf2e8,#fff); }
+    .share-hero img { width:100%; height:155px; object-fit:contain; display:block; mix-blend-mode:multiply; }
+    .camera-status { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+    .status-copy b { font-size:11px; display:block; } .status-copy span { font-size:8px; color:var(--muted); }
+    .status-pill { padding:6px 9px; border-radius:999px; background:#f1eee9; color:#777; font-size:8px; font-weight:800; }
+    .status-pill.connected { background:#ddefd9; color:var(--green); }
+    .settings-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:11px 0; }
+    .setting { padding:10px 5px; text-align:center; border-radius:11px; background:#fff; border:1px solid var(--line); font-size:8px; color:#5e675f; }
+    .live-preview { position:relative; margin:0 -14px; height:300px; overflow:hidden; background:#111; }
+    .live-preview img { width:100%; height:100%; object-fit:cover; }
+    .live-bar { position:absolute; inset:10px 11px auto; display:flex; justify-content:space-between; align-items:center; color:#fff; }
+    .live-badge { padding:6px 8px; border-radius:8px; background:#e85a4f; font-size:8px; font-weight:900; letter-spacing:.06em; }
+    .viewer { padding:6px 8px; border-radius:8px; background:rgba(0,0,0,.45); font-size:8px; backdrop-filter:blur(8px); }
+    .live-bottom { position:absolute; left:0; right:0; bottom:0; padding:45px 13px 12px; color:#fff; background:linear-gradient(transparent,rgba(0,0,0,.72)); }
+    .live-bottom b { font-size:13px; } .live-bottom p { margin:4px 0 0; font-size:8px; opacity:.88; }
+
+    .pod-hero { margin:0 -14px; }
+    .pod-hero img { width:100%; height:230px; object-fit:cover; display:block; }
+    .time-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+    .time-slot { border:1px solid var(--line); background:#fff8f1; border-radius:11px; padding:10px; color:#5e605e; font-size:9px; cursor:pointer; }
+    .time-slot.active { background:var(--orange); color:#fff; border-color:var(--orange); font-weight:800; }
+    .access-note { display:flex; align-items:center; gap:7px; padding:9px; border-radius:10px; background:#dcf0d9; color:var(--green); font-size:9px; }
+
+    .profile-cover { margin:0 -14px; padding:22px 18px 20px; background:linear-gradient(135deg,var(--peach),#fff1df 60%,var(--mint)); text-align:center; }
+    .profile-cover .avatar { width:70px; height:70px; margin:0 auto 8px; font-size:24px; border:4px solid rgba(255,255,255,.75); }
+    .profile-cover h2 { margin:0; font-size:18px; } .profile-cover p { margin:3px 0 0; color:#59665b; font-size:9px; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); margin:10px 0 0; }
+    .stat b { font-size:12px; display:block; } .stat span { font-size:7px; color:#677168; }
+    .menu { margin-top:12px; }
+    .menu-item { width:100%; border:0; border-bottom:1px solid var(--line); background:#fff; display:grid; grid-template-columns:34px 1fr 18px; gap:9px; align-items:center; padding:12px; text-align:left; cursor:pointer; }
+    .menu-item:first-child { border-radius:14px 14px 0 0; } .menu-item:last-child { border:0; border-radius:0 0 14px 14px; }
+    .menu-item b { font-size:10px; } .menu-item span { display:block; font-size:8px; color:var(--muted); margin-top:2px; }
+
+    .toast { position:absolute; z-index:120; left:50%; bottom:84px; transform:translate(-50%,16px); min-width:70%; max-width:88%; padding:10px 12px; border-radius:12px; color:#fff; background:rgba(37,60,39,.94); text-align:center; font-size:9px; font-weight:700; opacity:0; pointer-events:none; transition:.25s ease; box-shadow:0 12px 30px rgba(0,0,0,.18); }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    .modal-layer { position:absolute; z-index:110; inset:0; display:grid; place-items:center; padding:24px; background:rgba(29,37,30,.36); backdrop-filter:blur(8px); animation:fade .2s; }
+    @keyframes fade { from { opacity:0; } }
+    .modal { width:100%; border-radius:22px; padding:20px; text-align:center; background:#fffaf4; box-shadow:0 24px 60px rgba(0,0,0,.24); }
+    .success-mark { width:54px; height:54px; margin:0 auto 12px; border-radius:50%; display:grid; place-items:center; background:var(--mint); color:var(--green); font-size:26px; font-weight:900; }
+    .modal h3 { margin:0 0 6px; font-size:17px; } .modal p { margin:0 0 15px; color:var(--muted); font-size:9px; line-height:1.5; }
+
+    .hint { position:absolute; left:50%; bottom:-30px; transform:translateX(-50%); color:#637064; font-size:10px; white-space:nowrap; }
+    .hint b { color:var(--green); }
+
+    svg { display:block; }
+    @media (max-width: 1060px) {
+      .stage { grid-template-columns:auto auto; }
+      .intro { display:none; }
+    }
+    @media (max-width: 720px) {
+      body { background:#efe8df; }
+      .stage { display:grid; grid-template-columns:1fr; padding:18px 0 36px; }
+      .guide { order:2; width:min(390px,calc(100vw - 30px)); max-width:none; padding:16px; }
+      .guide > p, .route-btn small { display:none; }
+      .route-list { grid-template-columns:1fr 1fr; }
+      .route-btn { grid-template-columns:26px 1fr; padding:9px; }
+      .route-num { width:25px; height:25px; }
+      .route-arrow { display:none; }
+      .hint { display:none; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <section class="intro" aria-label="Prototype introduction">
+      <div class="eyebrow" data-shell="eyebrow">Interactive prototype</div>
+      <h1 id="introTitle">Travel slowly.<br><span>Live locally.</span></h1>
+      <p data-shell="intro-copy">A high-fidelity prototype connecting senior-friendly home exchange, community life, panoramic live sharing, and accessible offline immersion.</p>
+    </section>
+
+    <section class="phone-wrap" aria-label="Interactive iPhone demo">
+      <div class="iphone">
+        <i class="side-button mute"></i><i class="side-button vol-up"></i><i class="side-button vol-down"></i><i class="side-button power"></i>
+        <div class="screen" id="phoneScreen">
+          <div class="dynamic-island"></div>
+          <div class="status-bar"><span id="clock">9:41</span><span class="status-icons"><span>▮▮▮</span><span>⌁</span><i class="battery"></i></span></div>
+          <div id="app"></div>
+          <div class="toast" id="toast"></div>
+        </div>
+      </div>
+      <div class="hint" id="demoHint"><b>Tip:</b> tap, scroll, or swipe between main tabs</div>
+    </section>
+
+    <aside class="guide" aria-label="Prototype routes">
+      <h2 data-shell="guide-title">Try a complete flow</h2>
+      <p data-shell="guide-copy">Use the phone freely, or jump to a key scenario. Every route remains interactive.</p>
+      <div class="route-list">
+        <button class="route-btn" data-route="exchange"><span class="route-num">01</span><span><b data-shell="route-exchange">Exchange a home</b><small data-shell="route-exchange-sub">Find → detail → chat → confirm</small></span><span class="route-arrow">›</span></button>
+        <button class="route-btn" data-route="share"><span class="route-num">02</span><span><b data-shell="route-share">Start a live share</b><small data-shell="route-share-sub">Connect camera → go live</small></span><span class="route-arrow">›</span></button>
+        <button class="route-btn" data-route="immersive"><span class="route-num">03</span><span><b data-shell="route-immersive">Reserve the pod</b><small data-shell="route-immersive-sub">Choose an accessible time slot</small></span><span class="route-arrow">›</span></button>
+        <button class="route-btn" data-route="community"><span class="route-num">04</span><span><b data-shell="route-community">Join local life</b><small data-shell="route-community-sub">Activities and volunteering</small></span><span class="route-arrow">›</span></button>
+      </div>
+      <button class="reset-link" id="resetDemo" data-shell="reset">Reset prototype</button>
+    </aside>
+  </main>
+
+  <script>
+    const A = 'assets/';
+    const housePhotos = [
+      ['jane-home.jpg',"Jane's bright accessible living room"],
+      ['jane-kitchen.png',"Jane's accessible kitchen"],
+      ['jane-bedroom.png',"Jane's accessible bedroom"]
+    ];
+    const state = {
+      screen: 'home', stack: [], activeTab: 'home', filter: 'Exchange',
+      messages: [
+        { who:'Leonard', mine:true, text:'Hi Jane. Is the garden part of your community?', time:'10:30 AM' },
+        { who:'Jane', mine:false, text:"Yes. It’s just outside my building.", time:'10:31 AM' },
+        { who:'Leonard', mine:true, text:'It looks lovely.', time:'10:32 AM' }
+      ],
+      streaming: 'disconnected', streamSeconds: 0, streamTimer: null,
+      selectedTime: '3:30 - 4:30', reserved:false, joined:false, confirmed:false,
+      lang:'en', houseImage:0
+    };
+
+    const icons = {
+      back:'<path d="m15 18-6-6 6-6"/>',
+      home:'<path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
+      search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+      plus:'<path d="M12 5v14M5 12h14"/>',
+      users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+      user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+      bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+      calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+      chevron:'<path d="m9 18 6-6-6-6"/>',
+      pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+      access:'<circle cx="12" cy="5" r="2"/><path d="M9 22l2-7 2 2h4l2 4M10 9l5 2 2 3M8 10l3-2"/>',
+      send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+      camera:'<path d="M14.5 4 16 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3l1.5-3Z"/><circle cx="12" cy="13" r="3"/>',
+      message:'<path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/>',
+      clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+      plane:'<path d="M2 16l20-8-7 14-3-7Z"/><path d="m12 15 3-3"/>',
+      heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',
+      settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/>',
+      check:'<path d="m5 12 4 4L19 6"/>',
+      house:'<path d="m3 11 9-8 9 8v9H3Z"/><path d="M9 20v-6h6v6"/>'
+    };
+    const svg = (name, size=20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.chevron}</svg>`;
+    const nav = active => `<nav class="bottom-nav">${[
+      ['home','Home','home'],['find','Find','search'],['share','Share','plus'],['community','Community','users'],['me','Me','user']
+    ].map(([id,label,ico])=>`<button class="nav-item ${id==='share'?'share':''} ${active===id?'active':''}" data-tab="${id}">${svg(ico)}<span>${label}</span></button>`).join('')}</nav>`;
+    const header = (title, right='') => `<div class="header"><button class="icon-btn" data-back aria-label="Back">${svg('back')}</button><h2>${title}</h2>${right || '<span class="spacer"></span>'}</div>`;
+
+    function homePage(){ return `<section class="app-page"><div class="scroll home-scroll">
+      <div class="hero-row"><div><h1>Hi Leonard!</h1><p>Good morning. Take your time today.</p></div><div class="hero-actions"><button class="lang-toggle" id="langToggle" aria-label="Translate all pages to ${state.lang==='en'?'Chinese':'English'}">${state.lang==='en'?'中':'EN'}</button><button class="bell" data-toast="No new alerts" aria-label="Notifications">${svg('bell',18)}</button></div></div>
+      <article class="card reservation"><div class="reservation-top"><b>Reserved Immersive Space</b><span>View all</span></div><div class="date-pill">${svg('calendar',20)}<div><strong>Nov 7 · 3:30–4:30</strong><small>Community Room 5 · Available</small></div></div><button class="btn btn-orange btn-block" data-open="immersive">Manage Reservation</button></article>
+      <div class="section-title"><h3>Completed live broadcast</h3><button data-toast="Broadcast archive opened">View all ›</button></div>
+      <article class="card completed"><div class="completed-line"><span class="check-dot">✓</span><div><b>Community Garden Tour</b><small>Oct 12 · Jane · 38 min</small></div><button class="icon-btn" data-open="share">${svg('chevron',16)}</button></div></article>
+      <div class="section-title"><h3>Community dynamics</h3><button data-tab="community">View all ›</button></div>
+      <div class="story-row">
+        <article class="story" data-tab="community"><img src="${A}garden.jpg" alt="Community garden"><div><b>Community garden</b><small>Helen shared 5 photos</small></div></article>
+        <article class="story" data-tab="community"><img src="${A}art-workshop.jpg" alt="Art workshop"><div><b>Art workshop</b><small>John shared a video</small></div></article>
+        <article class="story" data-tab="community"><img src="${A}tea-time.jpg" alt="Tea time"><div><b>Weekly tea time</b><small>Mary shared 3 photos</small></div></article>
+      </div>
+      <div class="section-title"><h3>Continue exploring</h3><button data-tab="find">Find ›</button></div>
+      <article class="card volunteer" data-open="house"><span class="vol-icon">⌂</span><div class="vol-copy"><b>Jane’s accessible home</b><small>Toronto · Garden community · Nov 5–18</small></div><span>›</span></article>
+    </div>${nav('home')}</section>`; }
+
+    function findPage(){ const listings = state.filter==='Exchange' ? `<article class="card listing" data-open="house"><img src="${A}jane-listing.jpg" alt="Jane's accessible home"><div class="listing-copy"><div class="person-line"><img class="avatar avatar-img" src="${A}avatar-jane.png" alt="Jane"><div class="person-meta"><b>Jane · 62</b><small>Toronto · 5h ago</small></div></div><h3>Bright accessible home</h3><p>Quiet neighborhood with elevator, wide doorways, and a community garden.</p><div class="tags"><span class="tag">2 rooms</span><span class="tag">Elevator</span><span class="tag">Garden</span></div></div></article><article class="card listing"><img src="${A}robert-listing.jpg" alt="Home near a park"><div class="listing-copy"><div class="person-line"><span class="avatar">RL</span><div class="person-meta"><b>Robert · 68</b><small>Vancouver · 1d ago</small></div></div><h3>Cozy home near park</h3><p>Close to the community center and public transit.</p><div class="tags"><span class="tag">Accessible</span><span class="tag">Balcony</span></div></div></article>` : `<article class="card event-info"><h3>${state.filter}</h3><p>Browse resident-shared ${state.filter.toLowerCase()} content. Select “Exchange” to continue the full home-exchange flow.</p><button class="btn btn-soft btn-block" data-filter="Exchange">Show Exchange homes</button></article>`;
+      return `<section class="app-page"><div class="scroll home-scroll"><div class="search-box">${svg('search',17)}<input id="searchInput" placeholder="Search houses, people, or keywords" aria-label="Search"></div><div class="tabs"><button class="tab active">Latest</button><button class="tab">Most popular</button><button class="tab">Most relevant</button></div><div class="chips">${['Post','User','Live','Activity','Exchange'].map(f=>`<button class="chip ${state.filter===f?'active':''}" data-filter="${f}">${f}</button>`).join('')}</div><div id="listingArea">${listings}</div></div>${nav('find')}</section>`; }
+
+    function housePage(){ const current=housePhotos[state.houseImage]||housePhotos[0]; return `<section class="app-page house-page">${header('House detail','<button class="icon-btn" data-toast="Saved to favorites">'+svg('heart',18)+'</button>')}<div class="scroll"><div class="house-hero"><img id="housePhoto" class="${state.houseImage===0?'legacy-photo':''}" src="${A}${current[0]}" alt="${current[1]}"><button class="house-arrow prev" data-house-step="-1" aria-label="Previous house photo">‹</button><button class="house-arrow next" data-house-step="1" aria-label="Next house photo">›</button><div class="house-dots">${housePhotos.map((_,i)=>`<button class="dot ${i===state.houseImage?'active':''}" data-house-image="${i}" aria-label="House photo ${i+1}"></button>`).join('')}</div></div><div class="detail-list">
+      <div class="detail-row"><span class="detail-icon">${svg('pin',16)}</span><div><b>Address</b><p>123 Maple Street, Toronto, ON</p></div></div>
+      <div class="detail-row"><span class="detail-icon">${svg('access',16)}</span><div><b>Accessibility</b><p>Elevator, step-free entrance, wide doorways, accessible bathroom</p></div></div>
+      <div class="detail-row"><span class="detail-icon">${svg('calendar',16)}</span><div><b>Available dates</b><p>Nov 5 – Nov 18</p></div></div>
+      <div class="detail-row"><span class="detail-icon">${svg('house',16)}</span><div><b>Introduction</b><p>My home is bright, quiet, and close to the park. I love gardening, and our community garden is just outside the building.</p></div></div>
+    </div></div><div class="sticky-actions"><button class="btn btn-orange" data-open="chat">${svg('message',15)} Message</button><button class="btn btn-green" data-open="confirmation">Request Exchange</button></div>${nav('find')}</section>`; }
+
+    function chatPage(){ const rows=state.messages.map(m=>`<div class="message ${m.mine?'mine':''}"><img class="avatar avatar-img" src="${A}${m.who==='Jane'?'avatar-jane.png':'avatar-leonard.png'}" alt="${m.who}"><div><div class="bubble">${m.text}</div><div class="bubble-time">${m.time}</div></div></div>`).join(''); return `<section class="app-page">${header('Jane','<button class="icon-btn" data-toast="Calling is available">•••</button>')}<div class="scroll chat-list" id="chatList">${rows}</div><form class="composer" id="messageForm"><input id="messageInput" autocomplete="off" placeholder="Type a message…"><button class="send" aria-label="Send">${svg('send',17)}</button></form>${nav('find')}</section>`; }
+
+    function confirmationPage(){ return `<section class="app-page">${header('Confirmation')}<div class="scroll"><article class="card info-box"><h3>Personal information</h3><div class="profile-pair"><div class="profile-line"><img class="avatar avatar-img" src="${A}avatar-leonard.png" alt="Leonard"><div class="profile-copy"><b>Leonard Anderson</b><small>Beijing, China</small></div><span>☎</span></div><div class="exchange-arrow">⇅</div><div class="profile-line"><img class="avatar avatar-img" src="${A}avatar-jane.png" alt="Jane"><div class="profile-copy"><b>Jane Thompson</b><small>Toronto, Canada</small></div><span>☎</span></div></div></article><article class="card info-box"><h3>Housing information</h3><div class="profile-pair"><div class="profile-line"><span>⌂</span><div class="profile-copy"><b>Leonard’s home</b><small>Beijing · Accessible</small></div><span></span></div><div class="exchange-arrow">⇄</div><div class="profile-line"><span>⌂</span><div class="profile-copy"><b>Jane’s home</b><small>Toronto · Elevator</small></div><span></span></div></div><div class="date-strip">${svg('calendar',14)} &nbsp; Nov 5 – Nov 18</div></article><article class="card info-box"><h3>Exchange rules</h3><ul class="rules"><li>Respect each other’s home and belongings.</li><li>Keep the home clean and tidy.</li><li>Follow house rules and local regulations.</li><li>Communicate promptly if any issue arises.</li><li>Emergency community contact available 24/7.</li></ul></article><button class="btn btn-green btn-block footer-btn" id="confirmExchange">Confirm exchange</button></div>${nav('find')}</section>`; }
+
+    function travelPage(){ return `<section class="app-page">${header('Travel Plan')}<div class="scroll"><div class="tabs"><button class="tab active">Trip planning</button><button class="tab">Suggested</button><button class="tab">Recommended</button><button class="tab">Activity</button></div><article class="card route-card"><div class="route-head"><div class="route-city"><b>Beijing</b><span>China</span></div><div class="route-plane">✈</div><div class="route-city"><b>Toronto</b><span>Canada</span></div></div><div class="date-strip">Nov 5 – Nov 18</div><div class="timeline"><div class="stop"><b>Nov 5 · Beijing (PEK)</b><span>Depart 10:30 AM · Direct flight</span></div><div class="stop"><b>Nov 5–18 · Stay with Jane</b><span>16 nights · Community support available</span></div><div class="stop"><b>Nov 18 · Toronto (YYZ)</b><span>Depart 1:30 PM</span></div></div></article><article class="card info-box"><h3>Travel tips</h3><p style="font-size:9px;color:var(--muted);line-height:1.5">Check travel requirements, bring your medication list, and save the community support contact offline.</p></article><button class="btn btn-green btn-block footer-btn" data-tab="home">Finish plan</button></div>${nav('me')}</section>`; }
+
+    function communityPage(){ return `<section class="app-page"><div class="scroll"><div class="event-hero"><img src="${A}community-tea.jpg" alt="Seniors at a community garden tea"><div class="event-overlay"><h2>Garden Tea Afternoon</h2><p>Sat, Nov 8 · 2:00–4:00 PM · Community Garden</p></div></div><article class="card event-info"><div class="tags"><span class="tag">Accessible</span><span class="tag">Neighbors</span><span class="tag">Tea</span></div><p>Enjoy tea, conversation, and the beauty of the garden with local residents. New visitors are always welcome.</p><button class="btn ${state.joined?'btn-soft':'btn-orange'} btn-block" id="joinEvent">${state.joined?'Joined ✓':'Join Now'}</button></article><div class="section-title"><h3>Volunteer nearby</h3><button>View all ›</button></div><article class="card volunteer" data-toast="Volunteer details opened"><span class="vol-icon">♡</span><div class="vol-copy"><b>Meals on Wheels Delivery</b><small>Help deliver meals to local seniors.</small></div><span>›</span></article><article class="card volunteer" data-toast="Chess group saved"><img class="avatar-img" src="${A}avatar-mr-chen.png" alt="Mr. Chen"><div class="vol-copy"><b>Mr. Chen’s Chess Group</b><small>Thursday · There’s usually an empty chair.</small></div><span>›</span></article></div>${nav('community')}</section>`; }
+
+    function sharePage(){ let body=''; if(state.streaming==='disconnected') body=`<article class="card share-hero"><img src="${A}camera-three-view.png" alt="360 camera product views"><div class="camera-status"><div class="status-copy"><b>Community 360 Camera</b><span>Nearby · Ready to pair</span></div><span class="status-pill">Not connected</span></div></article><article class="card info-box"><h3>Share a real day</h3><p style="font-size:9px;color:var(--muted);line-height:1.5">Connect the camera through the app. After streaming starts, the camera can follow at walking pace while you keep your phone away.</p><button class="btn btn-green btn-block" id="connectCamera">Connect camera</button></article>`; else if(state.streaming==='connected') body=`<article class="card share-hero"><img src="${A}camera-three-view.png" alt="Connected 360 camera"><div class="camera-status"><div class="status-copy"><b>Community 360 Camera</b><span>Battery 84% · Signal strong</span></div><span class="status-pill connected">Connected</span></div></article><div class="settings-grid"><div class="setting">${svg('camera',16)}<br>360° view</div><div class="setting">${svg('settings',16)}<br>Auto follow</div><div class="setting">${svg('access',16)}<br>Slow pace</div></div><article class="card info-box"><h3>Preview ready</h3><p style="font-size:9px;color:var(--muted)">Garden entrance · Audio and panoramic video are ready.</p><button class="btn btn-orange btn-block" id="startStream">Start Streaming</button></article>`; else body=`<div class="live-preview"><img src="${A}community-tea.jpg" alt="Live community garden"><div class="live-bar"><span class="live-badge">LIVE</span><span class="viewer">◉ 3 viewers · <span id="liveTimer">${formatTime(state.streamSeconds)}</span></span></div><div class="live-bottom"><b>Garden Tea Afternoon</b><p>Jane is sharing this moment with Leonard.</p></div></div><article class="card info-box"><div class="camera-status"><div class="status-copy"><b>Camera following Jane</b><span>Slow pace · Obstacle avoidance active</span></div><span class="status-pill connected">Streaming</span></div><button class="btn btn-soft btn-block" style="margin-top:10px" id="stopStream">Stop streaming</button></article>`; return `<section class="app-page"><div class="scroll home-scroll">${body}</div>${nav('share')}</section>`; }
+
+    function immersivePage(){ const slots=['1:30 - 2:30','2:30 - 3:30','3:30 - 4:30','4:30 - 5:30','5:30 - 6:30','6:30 - 7:30']; return `<section class="app-page">${header('Immersive Space')}<div class="scroll"><div class="pod-hero"><img src="${A}immersive-pod.png" alt="Compact accessible immersive pod"></div><div class="section-title"><h3>Select a time</h3><button data-toast="Date changed">Nov 7 ›</button></div><div class="time-grid">${slots.map(s=>`<button class="time-slot ${state.selectedTime===s?'active':''}" data-time="${s}">${s}</button>`).join('')}</div><div class="access-note">${svg('access',16)} Wheelchair accessible · No headset required</div><article class="card info-box"><h3>Selected time</h3><p style="font-size:10px;color:var(--muted)">Nov 7 · ${state.selectedTime}<br>Community Room 5</p></article><button class="btn ${state.reserved?'btn-soft':'btn-green'} btn-block footer-btn" id="reservePod">${state.reserved?'Reservation confirmed ✓':'Reserve'}</button></div>${nav('home')}</section>`; }
+
+    function mePage(){ return `<section class="app-page"><div class="scroll"><div class="profile-cover"><img class="avatar avatar-img" src="${A}avatar-leonard.png" alt="Leonard"><h2>Leonard Anderson</h2><p>Beijing · Member since 2024</p><div class="stats"><div class="stat"><b>5.0</b><span>Rating</span></div><div class="stat"><b>12</b><span>Posts</span></div><div class="stat"><b>3</b><span>Trips</span></div></div></div><div class="menu"><button class="menu-item" data-open="travel"><span class="detail-icon">${svg('plane',16)}</span><span><b>My travel plans</b><span>Toronto · Nov 5–18</span></span><span>›</span></button><button class="menu-item" data-open="house"><span class="detail-icon">${svg('house',16)}</span><span><b>My home exchange</b><span>View confirmation and rules</span></span><span>›</span></button><button class="menu-item" data-open="immersive"><span class="detail-icon">${svg('camera',16)}</span><span><b>Immersive reservations</b><span>${state.reserved?'1 confirmed reservation':'Choose a viewing time'}</span></span><span>›</span></button><button class="menu-item" data-toast="Planning assistant opened"><span class="detail-icon">${svg('message',16)}</span><span><b>Planning assistant</b><span>Community support and travel help</span></span><span>›</span></button></div></div>${nav('me')}</section>`; }
+
+    const zh = {
+      'Home':'首页','Find':'发现','Share':'分享','Community':'社区','Me':'我的','Back':'返回','Send':'发送','Notifications':'通知',
+      'Hi Leonard!':'你好，Leonard！','Good morning. Take your time today.':'早上好，今天慢慢来。','No new alerts':'暂无新通知',
+      'Reserved Immersive Space':'已预约沉浸体验空间','View all':'查看全部','View all ›':'查看全部 ›','Nov 7 · 3:30–4:30':'11月7日 · 3:30–4:30','Community Room 5 · Available':'社区活动室 5 · 可使用','Manage Reservation':'管理预约',
+      'Completed live broadcast':'已完成的直播','Broadcast archive opened':'已打开直播存档','Community Garden Tour':'社区花园漫游','Oct 12 · Jane · 38 min':'10月12日 · Jane · 38分钟',
+      'Community dynamics':'社区动态','Community garden':'社区花园','Helen shared 5 photos':'Helen 分享了5张照片','Art workshop':'艺术工作坊','John shared a video':'John 分享了1段视频','Weekly tea time':'每周茶会','Mary shared 3 photos':'Mary 分享了3张照片',
+      'Continue exploring':'继续探索','Find ›':'发现 ›','Jane’s accessible home':'Jane 的无障碍住宅','Toronto · Garden community · Nov 5–18':'多伦多 · 花园社区 · 11月5–18日',
+      'Search houses, people, or keywords':'搜索住宅、用户或关键词','Search':'搜索','Latest':'最新','Most popular':'最热门','Most relevant':'最相关','Post':'帖子','User':'用户','Live':'直播','Activity':'活动','Exchange':'换房','Browse resident-shared post content. Select “Exchange” to continue the full home-exchange flow.':'浏览居民分享的帖子内容。选择“换房”继续完整的换房流程。','Browse resident-shared user content. Select “Exchange” to continue the full home-exchange flow.':'浏览社区用户。选择“换房”继续完整的换房流程。','Browse resident-shared live content. Select “Exchange” to continue the full home-exchange flow.':'浏览居民分享的直播内容。选择“换房”继续完整的换房流程。','Browse resident-shared activity content. Select “Exchange” to continue the full home-exchange flow.':'浏览居民分享的活动内容。选择“换房”继续完整的换房流程。',
+      'Jane · 62':'Jane · 62岁','Toronto · 5h ago':'多伦多 · 5小时前','Bright accessible home':'明亮的无障碍住宅','Quiet neighborhood with elevator, wide doorways, and a community garden.':'安静社区，配有电梯、宽门和社区花园。','2 rooms':'2个房间','Elevator':'电梯','Garden':'花园',
+      'Robert · 68':'Robert · 68岁','Vancouver · 1d ago':'温哥华 · 1天前','Cozy home near park':'公园旁的温馨住宅','Close to the community center and public transit.':'靠近社区中心和公共交通。','Accessible':'无障碍','Balcony':'阳台','Show Exchange homes':'查看换房住宅',
+      'House detail':'住宅详情','Saved to favorites':'已收藏','Previous house photo':'上一张住宅照片','Next house photo':'下一张住宅照片','Address':'地址','123 Maple Street, Toronto, ON':'加拿大安大略省多伦多枫树街123号',
+      'Accessibility':'无障碍设施','Elevator, step-free entrance, wide doorways, accessible bathroom':'电梯、无台阶入口、宽门及无障碍浴室','Available dates':'可用日期','Nov 5 – Nov 18':'11月5日 – 11月18日','Introduction':'房屋介绍','My home is bright, quiet, and close to the park. I love gardening, and our community garden is just outside the building.':'我的家明亮安静，离公园很近。我喜欢园艺，社区花园就在楼外。','Message':'联系房主','Request Exchange':'申请换房',
+      'Calling is available':'可发起通话','Type a message…':'输入消息…','Hi Jane. Is the garden part of your community?':'嗨，Jane。那个花园属于你们社区吗？','Yes. It’s just outside my building.':'是的，就在我住的楼外。','It looks lovely.':'看起来很不错。','I’d be happy to show you around during the live preview.':'直播预览时我很乐意带你到处看看。','Now':'刚刚',
+      'Confirmation':'换房确认','Personal information':'个人信息','Leonard Anderson':'Leonard Anderson','Beijing, China':'中国北京','Jane Thompson':'Jane Thompson','Toronto, Canada':'加拿大多伦多','Housing information':'房屋信息','Leonard’s home':'Leonard 的住宅','Beijing · Accessible':'北京 · 无障碍','Jane’s home':'Jane 的住宅','Toronto · Elevator':'多伦多 · 电梯','Exchange rules':'换房守则','Respect each other’s home and belongings.':'尊重彼此的住宅与物品。','Keep the home clean and tidy.':'保持住宅整洁。','Follow house rules and local regulations.':'遵守房屋规则与当地规定。','Communicate promptly if any issue arises.':'遇到问题及时沟通。','Emergency community contact available 24/7.':'社区紧急联系人全天候在线。','Confirm exchange':'确认换房',
+      'Travel Plan':'旅居计划','Trip planning':'行程规划','Suggested':'建议','Recommended':'推荐','Beijing':'北京','China':'中国','Toronto':'多伦多','Canada':'加拿大','Nov 5 · Beijing (PEK)':'11月5日 · 北京（PEK）','Depart 10:30 AM · Direct flight':'上午10:30出发 · 直飞','Nov 5–18 · Stay with Jane':'11月5–18日 · 入住 Jane 家','16 nights · Community support available':'16晚 · 可获得社区支持','Nov 18 · Toronto (YYZ)':'11月18日 · 多伦多（YYZ）','Depart 1:30 PM':'下午1:30出发','Travel tips':'出行提示','Check travel requirements, bring your medication list, and save the community support contact offline.':'确认出行要求，随身携带用药清单，并离线保存社区支持联系方式。','Finish plan':'完成计划',
+      'Garden Tea Afternoon':'花园下午茶','Sat, Nov 8 · 2:00–4:00 PM · Community Garden':'11月8日周六 · 下午2:00–4:00 · 社区花园','Neighbors':'邻里','Tea':'茶会','Enjoy tea, conversation, and the beauty of the garden with local residents. New visitors are always welcome.':'与当地居民一起喝茶、聊天、欣赏花园，新来的旅居者随时都受欢迎。','Join Now':'立即参加','Joined ✓':'已参加 ✓','Volunteer nearby':'附近志愿活动','Meals on Wheels Delivery':'社区送餐志愿服务','Help deliver meals to local seniors.':'协助为社区老人配送餐食。','Mr. Chen’s Chess Group':'陈老师的象棋小组','Thursday · There’s usually an empty chair.':'每周四 · 通常会留一个空位。','Volunteer details opened':'已打开志愿活动详情','Chess group saved':'已收藏象棋小组','Garden Tea Afternoon added':'已添加花园下午茶',
+      'Community 360 Camera':'社区全景相机','Nearby · Ready to pair':'设备在附近 · 可连接','Not connected':'未连接','Share a real day':'分享真实的一天','Connect the camera through the app. After streaming starts, the camera can follow at walking pace while you keep your phone away.':'通过 App 连接相机。直播开始后，相机会以步行速度跟随，你可以收起手机自然参与活动。','Connect camera':'连接相机','Connecting…':'连接中…','Battery 84% · Signal strong':'电量84% · 信号良好','Connected':'已连接','360° view':'360°全景','Auto follow':'自动跟随','Slow pace':'慢速跟随','Preview ready':'预览已就绪','Garden entrance · Audio and panoramic video are ready.':'花园入口 · 音频和全景画面已就绪。','Start Streaming':'开始直播','LIVE':'直播中','3 viewers ·':'3人观看 ·','◉ 3 viewers ·':'◉ 3人观看 ·','Jane is sharing this moment with Leonard.':'Jane 正在与 Leonard 分享这一刻。','Camera following Jane':'相机正在跟随 Jane','Slow pace · Obstacle avoidance active':'慢速跟随 · 主动避障','Streaming':'直播中','Stop streaming':'结束直播','Camera connected':'相机已连接','Live stream started':'直播已开始','Live stream saved':'直播已保存',
+      'Immersive Space':'沉浸体验空间','Select a time':'选择时间','Date changed':'日期已更改','Nov 7 ›':'11月7日 ›','Nov 7 · 1:30 - 2:30':'11月7日 · 1:30–2:30','Nov 7 · 2:30 - 3:30':'11月7日 · 2:30–3:30','Nov 7 · 3:30 - 4:30':'11月7日 · 3:30–4:30','Nov 7 · 4:30 - 5:30':'11月7日 · 4:30–5:30','Nov 7 · 5:30 - 6:30':'11月7日 · 5:30–6:30','Nov 7 · 6:30 - 7:30':'11月7日 · 6:30–7:30','Wheelchair accessible · No headset required':'轮椅可进入 · 无需佩戴头显','Selected time':'已选时间','Community Room 5':'社区活动室 5','Reserve':'预约','Reservation confirmed ✓':'预约已确认 ✓','Reservation already confirmed':'预约已经确认','Space reserved':'体验空间预约成功','Done':'完成',
+      'Beijing · Member since 2024':'北京 · 2024年加入','Rating':'评分','Posts':'帖子','Trips':'旅居','My travel plans':'我的旅居计划','Toronto · Nov 5–18':'多伦多 · 11月5–18日','My home exchange':'我的换房','View confirmation and rules':'查看确认信息与规则','Immersive reservations':'沉浸体验预约','1 confirmed reservation':'1个已确认预约','Choose a viewing time':'选择体验时间','Planning assistant':'规划助手','Community support and travel help':'社区支持与旅居协助','Planning assistant opened':'已打开规划助手',
+      'Exchange confirmed':'换房已确认','Jane and Leonard can now review their shared travel plan.':'Jane 和 Leonard 现在可以查看共同的旅居计划。','View travel plan':'查看旅居计划','Prototype reset':'原型已重置'
+    };
+    function tr(text){ return state.lang==='zh' ? (zh[text] || text) : text; }
+    function applyLanguage(root){
+      document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';
+      if(state.lang!=='zh')return;
+      const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); const nodes=[];
+      while(walker.nextNode())nodes.push(walker.currentNode);
+      nodes.forEach(node=>{const raw=node.nodeValue,key=raw.trim();if(key&&zh[key])node.nodeValue=raw.replace(key,zh[key]);});
+      root.querySelectorAll('[placeholder],[aria-label]').forEach(el=>['placeholder','aria-label'].forEach(attr=>{const value=el.getAttribute(attr);if(value&&zh[value])el.setAttribute(attr,zh[value]);}));
+    }
+    const shellZh = {
+      'eyebrow':'互动原型',
+      'intro-copy':'一个面向老年旅居的高保真原型，串联友好换房、社区生活、全景实时分享与无障碍线下沉浸体验。',
+      'guide-title':'体验完整产品流程',
+      'guide-copy':'可以自由操作手机，也可以直接进入关键场景；每条流程都支持完整交互。',
+      'route-exchange':'交换住所','route-exchange-sub':'发现 → 详情 → 沟通 → 确认',
+      'route-share':'开启实时分享','route-share-sub':'连接相机 → 开始直播',
+      'route-immersive':'预约沉浸空间','route-immersive-sub':'选择无障碍体验时段',
+      'route-community':'融入当地生活','route-community-sub':'社区活动与志愿服务',
+      'reset':'重置原型'
+    };
+    function applyShellLanguage(){
+      document.querySelectorAll('[data-shell]').forEach(el=>{
+        if(!el.dataset.en)el.dataset.en=el.textContent;
+        el.textContent=state.lang==='zh'?(shellZh[el.dataset.shell]||el.dataset.en):el.dataset.en;
+      });
+      const title=document.getElementById('introTitle');
+      if(title)title.innerHTML=state.lang==='zh'?'慢慢旅行。<br><span>融入当地生活。</span>':'Travel slowly.<br><span>Live locally.</span>';
+      const hint=document.getElementById('demoHint');
+      if(hint)hint.innerHTML=state.lang==='zh'?'<b>提示：</b>点击、滚动或左右滑动切换主要页面':'<b>Tip:</b> tap, scroll, or swipe between main tabs';
+    }
+
+    const pages={home:homePage,find:findPage,house:housePage,chat:chatPage,confirmation:confirmationPage,travel:travelPage,community:communityPage,share:sharePage,immersive:immersivePage,me:mePage};
+    const app=document.getElementById('app');
+
+    function render(){ app.innerHTML=(pages[state.screen]||homePage)(); applyLanguage(app); applyShellLanguage(); bind(); requestAnimationFrame(()=>{ const c=document.getElementById('chatList'); if(c)c.scrollTop=c.scrollHeight; }); }
+    function updateHouseImage(index){
+      state.houseImage=(index+housePhotos.length)%housePhotos.length;
+      const photo=document.getElementById('housePhoto'); if(!photo)return;
+      const current=housePhotos[state.houseImage];
+      photo.src=A+current[0]; photo.alt=current[1]; photo.classList.toggle('legacy-photo',state.houseImage===0);
+      app.querySelectorAll('[data-house-image]').forEach((dot,i)=>dot.classList.toggle('active',i===state.houseImage));
+      if(photo.animate)photo.animate([{opacity:.5},{opacity:1}],{duration:180,easing:'ease-out'});
+    }
+    function openScreen(next,push=true){ if(next===state.screen)return; if(push)state.stack.push(state.screen); state.screen=next; if(['home','find','share','community','me'].includes(next))state.activeTab=next; render(); }
+    function openTab(tab){ state.stack=[]; state.activeTab=tab; state.screen=tab; render(); }
+    function goBack(){ state.screen=state.stack.pop()||state.activeTab||'home'; render(); }
+    function showToast(text){ const el=document.getElementById('toast'); el.textContent=tr(text); el.classList.add('show'); clearTimeout(showToast.t); showToast.t=setTimeout(()=>el.classList.remove('show'),1800); }
+    function showModal(title,text,actionLabel,action){ const layer=document.createElement('div'); layer.className='modal-layer'; layer.innerHTML=`<div class="modal"><div class="success-mark">✓</div><h3>${title}</h3><p>${text}</p><button class="btn btn-green btn-block" id="modalAction">${actionLabel}</button></div>`; document.getElementById('phoneScreen').appendChild(layer); applyLanguage(layer); layer.querySelector('#modalAction').onclick=()=>{layer.remove();action&&action();}; }
+    function formatTime(s){ const m=Math.floor(s/60).toString().padStart(2,'0'),ss=(s%60).toString().padStart(2,'0');return `${m}:${ss}`; }
+    function startTimer(){ clearInterval(state.streamTimer); state.streamTimer=setInterval(()=>{ state.streamSeconds++; const t=document.getElementById('liveTimer'); if(t)t.textContent=formatTime(state.streamSeconds); },1000); }
+
+    function bind(){
+      app.querySelectorAll('[data-tab]').forEach(el=>el.onclick=()=>openTab(el.dataset.tab));
+      app.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openScreen(el.dataset.open));
+      app.querySelectorAll('[data-back]').forEach(el=>el.onclick=goBack);
+      app.querySelectorAll('[data-toast]').forEach(el=>el.onclick=()=>showToast(el.dataset.toast));
+      app.querySelectorAll('[data-filter]').forEach(el=>el.onclick=()=>{state.filter=el.dataset.filter;render();});
+      app.querySelectorAll('[data-time]').forEach(el=>el.onclick=()=>{state.selectedTime=el.dataset.time;render();});
+      app.querySelectorAll('[data-house-image]').forEach(el=>el.onclick=()=>updateHouseImage(Number(el.dataset.houseImage)));
+      app.querySelectorAll('[data-house-step]').forEach(el=>el.onclick=()=>updateHouseImage(state.houseImage+Number(el.dataset.houseStep)));
+      const lang=document.getElementById('langToggle'); if(lang)lang.onclick=()=>{state.lang=state.lang==='en'?'zh':'en';render();};
+      const form=document.getElementById('messageForm'); if(form)form.onsubmit=e=>{e.preventDefault();const input=document.getElementById('messageInput');const text=input.value.trim();if(!text)return;state.messages.push({who:'Leonard',mine:true,text,time:'Now'});render();setTimeout(()=>{state.messages.push({who:'Jane',mine:false,text:'I’d be happy to show you around during the live preview.',time:'Now'});render();},850);};
+      const confirm=document.getElementById('confirmExchange'); if(confirm)confirm.onclick=()=>{state.confirmed=true;showModal('Exchange confirmed','Jane and Leonard can now review their shared travel plan.','View travel plan',()=>openScreen('travel'));};
+      const join=document.getElementById('joinEvent'); if(join)join.onclick=()=>{state.joined=true;render();showToast('Garden Tea Afternoon added');};
+      const connect=document.getElementById('connectCamera'); if(connect)connect.onclick=()=>{connect.textContent='Connecting…';setTimeout(()=>{state.streaming='connected';render();showToast('Camera connected');},650);};
+      const start=document.getElementById('startStream'); if(start)start.onclick=()=>{state.streaming='live';state.streamSeconds=0;render();startTimer();showToast('Live stream started');};
+      const stop=document.getElementById('stopStream'); if(stop)stop.onclick=()=>{state.streaming='connected';clearInterval(state.streamTimer);render();showToast('Live stream saved');};
+      const reserve=document.getElementById('reservePod'); if(reserve)reserve.onclick=()=>{ if(state.reserved){showToast('Reservation already confirmed');return;} state.reserved=true;showModal('Space reserved',`Nov 7 · ${state.selectedTime}<br>Community Room 5`,'Done',()=>{render();});};
+    }
+
+    document.querySelectorAll('[data-route]').forEach(btn=>btn.onclick=()=>{ const route=btn.dataset.route; if(route==='exchange'){state.filter='Exchange';openTab('find');} if(route==='share')openTab('share'); if(route==='immersive'){state.stack=['home'];state.screen='immersive';render();} if(route==='community')openTab('community'); });
+    document.getElementById('resetDemo').onclick=()=>{clearInterval(state.streamTimer);Object.assign(state,{screen:'home',stack:[],activeTab:'home',filter:'Exchange',streaming:'disconnected',streamSeconds:0,selectedTime:'3:30 - 4:30',reserved:false,joined:false,confirmed:false,lang:'en',houseImage:0,messages:[{who:'Leonard',mine:true,text:'Hi Jane. Is the garden part of your community?',time:'10:30 AM'},{who:'Jane',mine:false,text:"Yes. It’s just outside my building.",time:'10:31 AM'},{who:'Leonard',mine:true,text:'It looks lovely.',time:'10:32 AM'}]});render();showToast('Prototype reset');};
+
+    let x0=0,y0=0; const phone=document.getElementById('phoneScreen');
+    phone.addEventListener('pointerdown',e=>{x0=e.clientX;y0=e.clientY;});
+    phone.addEventListener('pointerup',e=>{const dx=e.clientX-x0,dy=e.clientY-y0;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.5&&['home','find','share','community','me'].includes(state.screen)){const tabs=['home','find','share','community','me'];let i=tabs.indexOf(state.screen);i=dx<0?Math.min(tabs.length-1,i+1):Math.max(0,i-1);openTab(tabs[i]);}});
+    setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});},30000);
+    render();
+  </script>
+</body>
+</html>
